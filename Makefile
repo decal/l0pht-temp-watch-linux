@@ -85,5 +85,7 @@ lin: linux
 ### RANDOM
 
 clean:
-	rm -f $(ALL) *.o core
+	rm -f *.o core
 
+clobber: clean
+	rm -f $(ALL)
