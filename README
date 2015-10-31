@@ -1,0 +1,9 @@
+Various compatibility updates to mudge's old school temp-watch tool that
+was released during his time with the (now) infamous L0pht Heavy Industries
+(the original hacker-space.)  Forward-porting modifications for Linux 
+applied by Derek Callaway
+
+Tested on: Ubuntu 14.04.3 LTS Linux ca2 3.13.0-49-generic SMP x86_64 GNU/Linux
+
+No upgrade is necessary for FreeBSD, OpenBSD
+
