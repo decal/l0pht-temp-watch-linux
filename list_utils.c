@@ -23,19 +23,25 @@ addnode(struct listStruct *list, char *watchdir,
 
   /* first time through */
   if (!list){
-    list = (struct listStruct *)malloc(sizeof(struct listStruct));
+
+    list = malloc(sizeof *list);
+
     if (!list){
       if (syslogflag){
-        syslog(LOG_ERR, "temp watch program out of memory... exiting\n");
+        syslog(LOG_ERR, "temp-watch program out of memory... exiting\n");
       } else {
-        perror("out of memory\n");
+        perror("malloc");
       }
-      exit(1);
+
+      exit(EXIT_FAILURE);
     }
+
     strncpy(list->filename, watchdir, MAXNAMLEN - 1);
     strcat(list->filename, "/");
     strncat(list->filename, file, MAXNAMLEN - strlen(list->filename) - 1);
+
     ret = lstat(list->filename, (struct stat *)&list->statbuf);
+
     if (ret){
       if (syslogflag){
         syslog(LOG_ERR, "%s unlinked before we could stat...\n", 
@@ -44,15 +50,19 @@ addnode(struct listStruct *list, char *watchdir,
         printf("%s unlinked before we could stat...\n", list->filename);
       }
     }
+
     list->next = NULL;
     list->prev = NULL;
+
     if (!ret)
       printnode(list, ADDITION);
-    return(list);
+
+    return list;
   } else {
 
     /* rewind to head of list just in case */
     ptr = list;
+
     while (ptr->prev)
       ptr = ptr->prev;
 
@@ -60,13 +70,15 @@ addnode(struct listStruct *list, char *watchdir,
     while (ptr->next)
       ptr = ptr->next;
 
-    tmp_ptr = (struct listStruct *)malloc(sizeof(struct listStruct));
+    tmp_ptr = malloc(sizeof *tmp_ptr);
+
     if (!tmp_ptr){
       if (syslogflag)
         syslog(LOG_ERR, "temp watch program out of memory... exiting\n");
       else
-        perror("out of memory\n");
-      exit(1);
+        perror("malloc");
+
+      exit(EXIT_FAILURE);
     }
 
     ptr->next = tmp_ptr;
@@ -79,6 +91,7 @@ addnode(struct listStruct *list, char *watchdir,
     strncpy(ptr->filename, watchdir, MAXNAMLEN -1);
     strcat(ptr->filename, "/");
     strncat(ptr->filename, file, MAXNAMLEN - strlen(ptr->filename) - 1);
+
     ret = lstat(ptr->filename, (struct stat *)&ptr->statbuf);
 
     if (ret){
@@ -92,16 +105,12 @@ addnode(struct listStruct *list, char *watchdir,
     if (!ret)
       printnode(ptr, ADDITION);
   }
-  return(list);
+  return list;
 }
 
-void 
-printnode(struct listStruct *list, int action){
-
-  char timehold[26];
-  char username[16];
-  char groupname[16];
-  char filemodes[11];
+static void printnode(struct listStruct *list, int action) {
+  char timehold[26], filemodes[11];
+  char username[16], groupname[16];
   char outputStr[(MAXNAMLEN * 2) + 256];
   char linkbuf[MAXNAMLEN + 1];
   struct winsize winsize;
@@ -126,28 +135,29 @@ printnode(struct listStruct *list, int action){
   memset((timehold + 12), '\0', sizeof(timehold) - 12); 
 
   pwent = getpwuid(list->statbuf.st_uid);
+
   if (pwent)
     strncpy(username, pwent->pw_name, sizeof(username));
   else
 #ifdef SOLARIS25
     sprintf(username, "%.5d", (int)list->statbuf.st_uid);
 #else
-    snprintf(username, sizeof(username), "%d", (int)list->statbuf.st_uid);
+    snprintf(username, sizeof username, "%d", (int)list->statbuf.st_uid);
 #endif
   
   groupent = getgrgid(list->statbuf.st_gid);
   if (groupent)
-    strncpy(groupname, groupent->gr_name, sizeof(groupname));
+    strncpy(groupname, groupent->gr_name, sizeof groupname);
   else
 #ifdef SOLARIS25
     sprintf(groupname, "%.5d", (int)list->statbuf.st_gid);
 #else
-    snprintf(groupname, sizeof(groupname), "%d", (int)list->statbuf.st_gid);
+    snprintf(groupname, sizeof groupname, "%d", (int)list->statbuf.st_gid);
 #endif
 
   getfilemodes(&list->statbuf, filemodes);
 
-  if (ioctl(1, TIOCGWINSZ, &winsize) == 0)
+  if (!ioctl(1, TIOCGWINSZ, &winsize))
     width = winsize.ws_col;
   else
     width = 80;
@@ -159,7 +169,7 @@ printnode(struct listStruct *list, int action){
           (long)list->statbuf.st_size, timehold, width - 60, list->filename);
 
   if (S_ISLNK(list->statbuf.st_mode) ){
-    ret = readlink(list->filename, linkbuf, sizeof(linkbuf));
+    ret = readlink(list->filename, linkbuf, sizeof linkbuf);
     if (ret != -1){
       strncat(outputStr, " -> ", 4);
       strncat(outputStr, linkbuf, ret); /* this is ok since we force readlink
@@ -204,12 +214,13 @@ prunelist(struct listStruct *list){
       printnode(ptr1, SUBTRACTION);
 
       /* the following better not happen as someone would have to unlink . */
-      if (ptr1->prev == NULL && ptr1->next == NULL){
+      if (!(ptr1->prev||ptr1->next)){
         free(ptr1);
-        return(NULL);
+
+        return NULL;
       }
 
-      if (ptr1->prev == NULL){ /* first element in list... again, this
+      if (!ptr1->prev){ /* first element in list... again, this
                                   better not happen */
         ptr1 = ptr1->next;
         free(ptr1->prev);

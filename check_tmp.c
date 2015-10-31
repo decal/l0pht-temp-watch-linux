@@ -208,8 +208,13 @@ int main(int argc, char **argv){
             strncpy(tmp1, watchdir, MAXNAMLEN - 1);
             strcat(tmp1, "/");
             strncat(tmp1, dp->d_name, (MAXNAMLEN - 1) - strlen(tmp1));
-            unlink(tmp1);
-            symlink(replacefile, tmp1);
+            
+            if(unlink(tmp1))
+              perror("unlink");
+
+            if(symlink(replacefile, tmp1))
+              perror("symlink");
+
             replacedone = 1;
           }
         }
@@ -226,8 +231,12 @@ int main(int argc, char **argv){
             strncpy(tmp1, watchdir, MAXNAMLEN - 1);
             strcat(tmp1, "/");
             strncat(tmp1, dp->d_name, (MAXNAMLEN - 1) - strlen(tmp1));
-            unlink(tmp1);
-            symlink(replacefile, tmp1);
+
+            if(unlink(tmp1))
+              perror("unlink");
+
+            if(symlink(replacefile, tmp1))
+              perror("symlink");
           }
         }
       }
@@ -246,8 +255,13 @@ int main(int argc, char **argv){
           }
           if (replaceflag){
             if (!replacedone){
-              unlink(tmp1);
-              symlink(replacefile, tmp1);
+              
+              if(unlink(tmp1))
+                perror("unlink");
+
+              if(symlink(replacefile, tmp1))
+                perror("symlink");
+
               replacedone = 1;
             }
           }
@@ -273,8 +287,12 @@ int main(int argc, char **argv){
           }
           if (replaceflag){
             if (!replacedone){
-              unlink(tmp1);
-              symlink(replacefile, tmp1);
+              if(unlink(tmp1))
+                perror("unlink");
+              
+              if(symlink(replacefile, tmp1))
+                perror("symlink");
+
               replacedone = 1;
             }
           }
@@ -299,8 +317,13 @@ int main(int argc, char **argv){
               strncpy(tmp1, watchdir, MAXNAMLEN - 1);
               strcat(tmp1, "/");
               strncat(tmp1, dp->d_name, (MAXNAMLEN - 1) - strlen(tmp1));
-              unlink(tmp1);
-              symlink(replacefile, tmp1);
+              
+              if(unlink(tmp1))
+                perror("unlink");
+
+              if(symlink(replacefile, tmp1))
+                perror("symlink");
+
               replacedone = 1;
             }
           }
@@ -317,8 +340,13 @@ int main(int argc, char **argv){
               strncpy(tmp1, watchdir, MAXNAMLEN - 1);
               strcat(tmp1, "/");
               strncat(tmp1, dp->d_name, (MAXNAMLEN - 1) - strlen(tmp1));
-              unlink(tmp1);
-              symlink(replacefile, tmp1);
+              
+              if(unlink(tmp1))
+                perror("unlink");
+
+              if(symlink(replacefile, tmp1))
+                perror("symlink");
+
               replacedone = 1;
             }
           }
@@ -338,8 +366,12 @@ int main(int argc, char **argv){
             }
             if (replaceflag){
               if (!replacedone){
-                unlink(tmp1);
-                symlink(replacefile, tmp1);
+                if(unlink(tmp1))
+                  perror("unlink");
+
+                if(symlink(replacefile, tmp1))
+                  perror("symlink");
+
                 replacedone = 1;
               }
             }
@@ -366,8 +398,13 @@ int main(int argc, char **argv){
             }
             if (replaceflag){
               if (!replacedone){
-                unlink(tmp1);
-                symlink(replacefile, tmp1);
+                
+                if(unlink(tmp1))
+                  perror("unlink");
+                
+                if(symlink(replacefile, tmp1))
+                  perror("symlink");
+
                 replacedone = 1;
               }
             }
