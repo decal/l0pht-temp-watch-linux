@@ -14,20 +14,22 @@ XFLAGS =        # xtra cflags, set by systype targets
 XLIBS =         # xtra libs if necessary?
 # -Bstatic for sunos,  -static for gcc, etc.  You want this, trust me.
 STATIC =
-CC ?= cc
-CC += $(CFLAGS)
-LD = $(CC) -s   # linker; defaults to stripped executables
+CC ?= gcc
+#CC += $(CFLAGS)
+# LD = $(CC) -s   # linker; defaults to stripped executables
+LD = $(CC)
 o = o           # object extension
-CKTEMP_OBJS=check_tmp.o daemon.o list_utils.o usage.o
-
+CKTEMP_OBJS = check_tmp.o daemon.o list_utils.o usage.o
 ALL = temp-watch
 
- 
 ### BOGON-CATCHERS
 
 bogus:
+	@echo
 	@echo "Usage:  make  <systype>  [options]"
-	@echo "   <systype> can be: solaris26,solaris25,bsd,linux,bsd-static,linux-static,generic"
+	@echo "   <systype> can be: solaris25, solaris26, bsd, linux"
+	@echo "                     bsd-static, linux-static, generic"
+	@echo
 
 ### HARD TARGETS
 
@@ -68,7 +70,6 @@ bsd-static:
 	XFLAGS='-DBSD -DREGEX -DREGCOMP_3C' CC="$(CFLAGS)"
 	STATIC="-static"
 
-
 BSD: bsd
 
 FreeBSD: OpenBSD
@@ -89,6 +90,13 @@ linux-static:
 	STATIC="-static"
 
 lin: linux
+
+linux-static-strip: linux-static strip
+
+bsd-static-strip: bsd-static strip
+
+strip: $(CKTEMP_OBJS) $(ALL)
+	strip $(CKTEMP_OBJS) $(ALL)
 
 #LIBS=-lgen
 

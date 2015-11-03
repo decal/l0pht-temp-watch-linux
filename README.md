@@ -24,9 +24,21 @@ Kali Linux 2.0 (Ubuntu 14.04.3 LTS according to `/etc/issue`)
 `make linux-static`
 (compile statically linked Linux binary)
 
+## Linux Stripped Static Compile: ##
+`make linux-static-srtip`
+(compile statically linked and stripped Linux binary)
+
 ## BSD Static Compile: ##
 `make bsd-static`
 (compile statically linked BSD binary)
+
+## BSD Stripped Static Compile: ##
+`make bsd-static-strip`
+(compile statically linked and stripped BSD binary)
+
+## Strip Symbols From Object and Binary Files: ##
+`make strip`
+(removes debugging symbols from compiled files)
 
 ## Clean: ##
 `make clean`
