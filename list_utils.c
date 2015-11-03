@@ -12,7 +12,7 @@ int checknode(struct listStruct *, char *, char *);
 void walklist(struct listStruct *);
 #endif
 void getfilemodes(struct stat *, char *);
-int copyfile(char *, char *);
+int copyfile(char *, const char *);
 int checkdir(char *);
 
 struct listStruct * 
@@ -146,7 +146,8 @@ static void printnode(struct listStruct *list, int action) {
 #endif
   
   groupent = getgrgid(list->statbuf.st_gid);
-  if (groupent)
+
+  if(groupent)
     strncpy(groupname, groupent->gr_name, sizeof groupname);
   else
 #ifdef SOLARIS25
@@ -157,10 +158,7 @@ static void printnode(struct listStruct *list, int action) {
 
   getfilemodes(&list->statbuf, filemodes);
 
-  if (!ioctl(1, TIOCGWINSZ, &winsize))
-    width = winsize.ws_col;
-  else
-    width = 80;
+  width = ioctl(1, TIOCGWINSZ, &winsize) ? 80 : winsize.ws_col;
 
   sprintf(outputStr,"%.2s %-11.20s %-2d %-8.20s %-8.20s %-6ld %-10.20s "
                     "%.*s",
@@ -168,20 +166,22 @@ static void printnode(struct listStruct *list, int action) {
           (int)list->statbuf.st_nlink, username, groupname,
           (long)list->statbuf.st_size, timehold, width - 60, list->filename);
 
-  if (S_ISLNK(list->statbuf.st_mode) ){
+  if(S_ISLNK(list->statbuf.st_mode)) {
+
     ret = readlink(list->filename, linkbuf, sizeof linkbuf);
-    if (ret != -1){
+
+    if (ret < 0) {
       strncat(outputStr, " -> ", 4);
-      strncat(outputStr, linkbuf, ret); /* this is ok since we force readlink
-                                           to limit to sizeof(linkbuf) */
+      strncat(outputStr, linkbuf, ret); /* this is ok cuz we force readlink
+                                           to limit to sizeof linkbuf */
     }
   }
-
-  if (syslogflag){
-    if (S_ISLNK(list->statbuf.st_mode) )
+ 
+  if (syslogflag && S_ISLNK(list->statbuf.st_mode)) {
       syslog(LOG_ALERT, "%s\n", outputStr);
   } else {
-    printf("%s\n", outputStr);
+    fprintf(stdout, "%s\n", outputStr);
+
     fflush(NULL);
   }
 
@@ -197,46 +197,45 @@ static void printnode(struct listStruct *list, int action) {
 
 struct listStruct *
 prunelist(struct listStruct *list){
-  struct listStruct *ptr1, *tmp_ptr;
-  struct stat sbuf;
+  struct listStruct *ptr1 = list, *tmp_ptr = NULL;
+  struct stat sbuf = { 0x0 };
 
-  ptr1 = list;
-  if (!ptr1){
-    return(NULL);
-  }
+  if(!ptr1)
+    return NULL;
 
   /* rewind the list to find that stupid bug */
-  while (ptr1->prev)
+  while((ptr1->prev))
     ptr1 = list = ptr1->prev;
 
-  while (ptr1) {
-    if ((lstat(ptr1->filename, &sbuf))){
+  while(ptr1) {
+    if((lstat(ptr1->filename, &sbuf))) {
       printnode(ptr1, SUBTRACTION);
 
-      /* the following better not happen as someone would have to unlink . */
-      if (!(ptr1->prev||ptr1->next)){
+      /* the following better not happen as someone would have to unlink */
+      if (!(ptr1->prev || ptr1->next)) {
         free(ptr1);
 
         return NULL;
       }
 
-      if (!ptr1->prev){ /* first element in list... again, this
+      if(!ptr1->prev) { /* first element in list... again, this
                                   better not happen */
         ptr1 = ptr1->next;
+
         free(ptr1->prev);
+
         ptr1->prev = NULL;
       /*  return(ptr1); */
       }
 
       /* must be a middle or end element ... good */
       tmp_ptr = ptr1;
-
       ptr1 = ptr1->prev;
       ptr1->next = tmp_ptr->next;
       
       free(tmp_ptr);
 
-      if (ptr1->next){
+      if(ptr1->next) {
         tmp_ptr = ptr1->next;
         tmp_ptr->prev = ptr1;
       }
@@ -248,57 +247,56 @@ prunelist(struct listStruct *list){
 #endif
     ptr1 = ptr1->next;
   }
-  return(list);
+
+  return list;
 }
 
 /* checknode returns 1 if it was already there 0 if not */
 int 
-checknode(struct listStruct *list, char *dirname, char *filename){
-  struct listStruct *ptr;
-  char name[MAXNAMLEN + 1];
+checknode(struct listStruct *list, char *dirname, char *filename) {
+  struct listStruct *ptr = list;
+  char name[MAXNAMLEN + 1] = { 0x0 };
 
-  ptr = list;
-  
   strncpy(name, dirname, MAXNAMLEN - 1);
   strcat(name, "/");
   strncat(name, filename, MAXNAMLEN - strlen(dirname) - 1);
 
 
-  while (ptr){
-    if (!(strcmp(ptr->filename, name)))
-      return(1);
+  while(ptr) {
+    if(!(strcmp(ptr->filename, name)))
+      return 1;
     else
       ptr = ptr->next;
   }
 
-  return(0);
-} 
+  return 0;
+}
 
 #ifdef DEBUG
-void 
-walklist(struct listStruct *list){
+void walklist(struct listStruct *list) {
 
-  struct listStruct *ptr;
+  struct listStruct *ptr = list;
   /* rewind just for the fuck of it */
   
-  ptr = list;
-
-  while (ptr->prev)
+  while(ptr->prev)
     ptr = ptr->prev;
 
-  while(ptr->next){
+  while(ptr->next) {
     printf("prev %x - curr %x [%s] - next %x\n", ptr->prev, ptr, ptr->filename, ptr->next);
+
     ptr = ptr->next;
   }
+
   printf("prev %x - curr %x - next %x\n\n", ptr->prev, ptr, ptr->filename, ptr->next);
 }
 #endif
 
-void getfilemodes(struct stat *statbuf, char *holder){
+void getfilemodes(struct stat *statbuf, char *holder) {
 
-  mode_t mode;
+  mode_t mode = 0x0;
 
   memset(holder, '\0', MODESIZE);
+
   mode = statbuf->st_mode;
 
   if (S_ISFIFO(mode))
@@ -370,14 +368,21 @@ void getfilemodes(struct stat *statbuf, char *holder){
 
 /* copyfile returns 1 on success 0 on failure */
 int 
-copyfile(char *fromfile, char *watchdir){
-  int fdin, fdout, cntr=0;
+copyfile(char *fromfile, const char *watchdir){
+  int fdin, fdout, cntr = 0;
   caddr_t src, dst;
   struct stat statbuf;
   char destfile[MAXNAMLEN], *ptr;
 
-  ptr = (char *)strrchr(fromfile, '/');
-  if (ptr)
+  if(!fromfile) {
+    perror("copyfile");
+
+    return 0;
+  }
+
+  ptr = strrchr(fromfile, '/');
+
+  if(ptr)
     ptr++;
   else
     ptr = fromfile;

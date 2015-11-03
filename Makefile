@@ -9,7 +9,7 @@
 # debugging
 # DFLAGS = -DTEST -DDEBUG
 DFLAGS = -DREGEX
-CFLAGS ?=-O2 -Wall
+CFLAGS ?=-O2 -Wall -pedantic
 XFLAGS =        # xtra cflags, set by systype targets
 XLIBS =         # xtra libs if necessary?
 # -Bstatic for sunos,  -static for gcc, etc.  You want this, trust me.
@@ -27,7 +27,7 @@ ALL = temp-watch
 
 bogus:
 	@echo "Usage:  make  <systype>  [options]"
-	@echo "   <systype> can be: solaris26,solaris25,bsd,linux"
+	@echo "   <systype> can be: solaris26,solaris25,bsd,linux,bsd-static,linux-static,generic"
 
 ### HARD TARGETS
 
@@ -61,8 +61,13 @@ solaris25:
 
 bsd:
 	make -e $(ALL) $(MFLAGS) \
-	XFLAGS='-DREGEX -DREGCOMP_3C' CC="$(CC) $(CFLAGS)" \
-	STATIC=-static
+	XFLAGS='-DBSD -DREGEX -DREGCOMP_3C' CC="$(CFLAGS)"
+
+bsd-static:
+	make -e $(ALL) $(MFLAGS) \
+	XFLAGS='-DBSD -DREGEX -DREGCOMP_3C' CC="$(CFLAGS)"
+	STATIC="-static"
+
 
 BSD: bsd
 
@@ -73,7 +78,6 @@ OpenBSD: FreeBSD
 generic:
 	make -e $(ALL) $(MFLAGS) \
 	XFLAGS='-DREGEX -DREGCOMP_3C' CC="$(CC) $(CFLAGS)" \
-	STATIC=-static
 
 Linux: generic
 
@@ -82,7 +86,7 @@ linux: Linux
 linux-static:
 	make -e $(ALL) $(MFLAGS) \
 	XFLAGS='-DREGEX -DREGCOMP_3C' CC="$(CC) $(CFLAGS) " \
-	STATIC=-static
+	STATIC="-static"
 
 lin: linux
 

@@ -8,7 +8,7 @@ void usage(char *progname);
 struct listStruct *addnode(struct listStruct *, char *, char *);
 struct listStruct *prunelist(struct listStruct *);
 int checknode(struct listStruct *, char *, char *);
-int copyfile(char *src, char *dst);
+int copyfile(char *src, const char *dst);
 int checkdir(char *);
 #ifdef DEBUG
 void walklist(struct listStruct *);
