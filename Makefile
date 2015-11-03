@@ -72,11 +72,17 @@ OpenBSD: FreeBSD
 
 generic:
 	make -e $(ALL) $(MFLAGS) \
-	XFLAGS='-DBSD -DREGEX -DREGCOMP_3C' CC="gcc $(CFLAGS)" STATIC=
+	XFLAGS='-DREGEX -DREGCOMP_3C' CC="$(CC) $(CFLAGS)" \
+	STATIC=-static
 
 Linux: generic
 
 linux: Linux
+
+linux-static:
+	make -e $(ALL) $(MFLAGS) \
+	XFLAGS='-DREGEX -DREGCOMP_3C' CC="$(CC) $(CFLAGS) " \
+	STATIC=-static
 
 lin: linux
 
